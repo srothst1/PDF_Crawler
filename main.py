@@ -69,6 +69,21 @@ def parse_structure(doc, interpreter, device):
         page_number += 1
     return general_index
 
+
+def RepresentsInt(s):
+    try:
+        int(s)
+        return True
+    except ValueError:
+        return False
+
+def RepresentsFloat(s):
+    try:
+        float(s)
+        return True
+    except ValueError:
+        return False
+
 def parse_compare(name_arr, index, number_of_values):
     '''
     input: name_arr, type = [["Name", "float"],.....,["Name", "float"]] |
@@ -86,16 +101,19 @@ def parse_compare(name_arr, index, number_of_values):
     all_near_values = []
     for page in index:
         names = [] #add string and coordinate
-        names_tup = []
+        names_tup = [] #tuple of names
         values = [] #everything else
-        values_tup = []
+        values_tup = [] #tuples of values
         for i in range(len(page)):
             if page[i][1].upper() in key_name:
-                names.append(page[i])
-                names_tup.append(page[i][0])
+                for x in name_arr:
+                    if page[i][1].upper() == x[0]:
+                        names.append([page[i], x[1]])
+                        names_tup.append(page[i][0])
             else:
                 values.append(page[i])
                 values_tup.append(page[i][0])
+
         values_tup = np.array(values_tup)
         #create a cKDTree
         tree = cKDTree(values_tup)
@@ -103,12 +121,13 @@ def parse_compare(name_arr, index, number_of_values):
             all_names.append(names[i])
             _, idx = tree.query(names_tup[i], k=number_of_values)
             x = []
-            for i in idx:
-                #print(values[i])
-                x.append(values[i])
+            for j in idx:
+                if names[i][1] == "int" and RepresentsInt(values[j][1]):
+                    x.append(values[j])
+                elif names[i][1] == "float" and RepresentsFloat(values[j][1]):
+                    x.append(values[j])
             all_near_values.append(x)
     return [all_names, all_near_values]
-
 
 def main():
     fp = open('Data/test_four.pdf', 'rb')
@@ -122,12 +141,18 @@ def main():
 
     index = parse_structure(doc, interpreter, device)
 
+    print(index[1]) #all data for one page
+
     name_arr = [["HEIGHT", "float"], ["WIDTH", "float"]]
+    name_arr_2 = [["SKU", "float"]]
 
-    all = parse_compare(name_arr, index, 20)
-
-    print(all[0][0])
-    print(all[1][0])
+    all = parse_compare(name_arr, index, 30)
+    
+    for i in range(len(all[0])):
+        print(i)
+        print(all[0][i])
+        print(all[1][i])
+        print("------")
 
 
 main()
