@@ -141,13 +141,14 @@ def main():
 
     index = parse_structure(doc, interpreter, device)
 
-    print(index[0]) #all data for the first page
+    #print(index[1]) #all data for one page
 
     name_arr = [["HEIGHT", "float"], ["WIDTH", "float"]]
     name_arr_2 = [["SKU", "float"]]
+    name_arr_3 = [["UPC", "float"]]
 
-    all = parse_compare(name_arr, index, 30)
-    
+    all = parse_compare(name_arr_3, index, 30)
+
     #print all names and nearby values
     for i in range(len(all[0])):
         print(all[0][i])
