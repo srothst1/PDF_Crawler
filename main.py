@@ -13,10 +13,29 @@ import numpy as np
 
 
 def alph_num(text):
+    '''
+    input: text, type = string
+    output: processed text, type = string
+    '''
+    #experimenting with different text editing strategies
+    '''
+    print(text)
+    print(type(text))
+    print("_____")
+    print(text.strip('!"#$%&\'()*+-/:;<=>?@[\\]^_`{|}~'))
+    print(re.sub(r'\W+', '', text))
+    return
+    '''
+
+    #return edited text
     return re.sub(r'\W+', '', text)
 
 def parse_layout(layout, page_information):
-    """Function to recursively parse the layout tree."""
+    '''
+    input: page layout, type = layout object | page information, type = ??
+    output: information about page [(x,y), "string"]
+    '''
+    #Function to recursively parse the layout tree.
     for lt_obj in layout:
         if isinstance(lt_obj, LTTextLine):
             text = alph_num(lt_obj.get_text())
@@ -32,6 +51,11 @@ def parse_layout(layout, page_information):
     return page_information
 
 def parse_structure(doc, interpreter, device):
+    '''
+    input: doc, type = PDF document | interpreter, type ?? | device, type =??
+    output: [[page #1 info],....., [page #n info]]
+    '''
+    #high level function
     page_number = 1
     general_index = []
     for page in PDFPage.create_pages(doc):
@@ -45,18 +69,21 @@ def parse_structure(doc, interpreter, device):
         page_number += 1
     return general_index
 
-
-
-#keep things that are the right type
-
-def parse_compare(name_arr, index):
+def parse_compare(name_arr, index, number_of_values):
+    '''
+    input: name_arr, type = [["Name", "float"],.....,["Name", "float"]] |
+    index, type = [[page #1 info],....., [page #n info]],
+    number_of_values, type = int
+    output: names and close values, type = [[All names],[All nearby values]]
+    '''
+    #key terms to search for
     key_name = []
     for name in name_arr:
         key_name.append(name[0])
-
+    #all names
     all_names = []
+    #all nearby values
     all_near_values = []
-
     for page in index:
         names = [] #add string and coordinate
         names_tup = []
@@ -69,24 +96,22 @@ def parse_compare(name_arr, index):
             else:
                 values.append(page[i])
                 values_tup.append(page[i][0])
-
         values_tup = np.array(values_tup)
+        #create a cKDTree
         tree = cKDTree(values_tup)
-
         for i in range(len(names_tup)):
             all_names.append(names[i])
-            _, idx = tree.query(names_tup[i], k=20)
+            _, idx = tree.query(names_tup[i], k=number_of_values)
             x = []
             for i in idx:
                 #print(values[i])
                 x.append(values[i])
             all_near_values.append(x)
-
     return [all_names, all_near_values]
 
 
 def main():
-    fp = open('test_four.pdf', 'rb')
+    fp = open('Data/test_four.pdf', 'rb')
     parser = PDFParser(fp)
     doc = PDFDocument(parser)
 
@@ -99,7 +124,7 @@ def main():
 
     name_arr = [["HEIGHT", "float"], ["WIDTH", "float"]]
 
-    all = parse_compare(name_arr, index)
+    all = parse_compare(name_arr, index, 20)
 
     print(all[0][0])
     print(all[1][0])
